@@ -160,7 +160,7 @@ def parse(code, language):
             if multi_line and line.strip().endswith(_multiend) and len(line.strip()) > len(_multiend):
                 multi_line = False
 
-            if not line.strip().startswith(_multistart) and not multi_line or multi_string:
+            if _multistart and not line.strip().startswith(_multistart) and not multi_line or multi_string:
 
                 process_as_code = True
 
@@ -173,8 +173,8 @@ def parse(code, language):
             else:
                 # Get rid of the delimiters so that they aren't in the final
                 # docs
-                line = line.replace(multistart, '')
-                line = line.replace(multiend, '')
+                if _multistart: line = line.replace(_multistart, '')
+                if _multiend: line = line.replace(_multiend, '')
                 docs_text += line.strip() + '\n'
                 indent_level = re.match(r"\s*", line).group(0)
 
