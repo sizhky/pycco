@@ -128,24 +128,39 @@ def parse(code, language):
     multi_line = False
     multi_string = False
     multistart, multiend = language.get("multistart"), language.get("multiend")
+    alldelims, allstarts, allends = [], [], []
+    if isinstance(multistart, list):
+        alldelims = alldelims + multistart
+        allstarts = multistart
+    else:
+        alldelims = alldelims + [multistart]
+        allstarts = [multistart]
+        
+    if isinstance(multiend, list):
+        alldelims = alldelims + multiend
+        allends = multiend
+    else:
+        alldelims = alldelims + [multiend]
+        allends = [multiend]
+        
     comment_matcher = language['comment_matcher']
 
     for line in lines:
         process_as_code = False
         # Only go into multiline comments section when one of the delimiters is
         # found to be at the start of a line
-        if multistart and multiend \
-           and any(line.lstrip().startswith(delim) or line.rstrip().endswith(delim)
-                   for delim in (multistart, multiend)):
+        if multistart and multiend and any(line.lstrip().startswith(delim) or line.rstrip().endswith(delim) for delim in alldelims):
             multi_line = not multi_line
+            _multistart = [delim for delim in alldelims if line.lstrip().startswith(delim)]
+            _multistart = _multistart[0] if len(_multistart) > 0 else None
+            
+            _multiend = [delim for delim in alldelims if line.rstrip().endswith(delim)]
+            _multiend = _multiend[0] if len(_multiend) > 0 else None
 
-            if multi_line \
-               and line.strip().endswith(multiend) \
-               and len(line.strip()) > len(multiend):
+            if multi_line and line.strip().endswith(_multiend) and len(line.strip()) > len(_multiend):
                 multi_line = False
 
-            if not line.strip().startswith(multistart) and not multi_line \
-               or multi_string:
+            if not line.strip().startswith(_multistart) and not multi_line or multi_string:
 
                 process_as_code = True
 
